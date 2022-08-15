@@ -1,14 +1,16 @@
 package com.betpawa.wallet.rest;
 
 import java.math.BigDecimal;
-
+import com.betpawa.wallet.UserRepository;
+import com.betpawa.wallet.model.User;
+import com.betpawa.wallet.service.WalletService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
 import com.betpawa.wallet.dto.Balance;
 import com.betpawa.wallet.dto.MoneyTransferData;
 import com.betpawa.wallet.dto.MoneyTransferResult;
@@ -19,7 +21,6 @@ import com.betpawa.wallet.rest.request.WithdrawRequest;
 import com.betpawa.wallet.rest.response.BalanceResponse;
 import com.betpawa.wallet.rest.response.OperationResponse;
 import com.betpawa.wallet.rest.response.OperationsResponse;
-import com.betpawa.wallet.service.WalletService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -29,28 +30,54 @@ import lombok.RequiredArgsConstructor;
 public class WalletController {
     private final WalletService service;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    //OK
     @PostMapping("deposit/{account}")
     public OperationResponse deposit(@PathVariable("account") Long account, DepositRequest request) {
         final MoneyTransferResult moneyTransferResult = service.debitAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
+        //Total balance after deposit
+        final Balance balance = service.balance(account);
         return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message());
     }
 
+    //OK
     @PostMapping("withdraw/{account}")
     public OperationResponse withdraw(@PathVariable("account") Long account, WithdrawRequest request) {
         final MoneyTransferResult moneyTransferResult = service.creditAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
+        //Total balance after withdraw
+        final Balance balance = service.balance(account);
         return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message());
     }
 
+    //OK
     @PostMapping("account")
     public BalanceResponse create(NewAccountRequest request) {
-        throw new IllegalStateException("Not implemented");
+
+        User user = new User();
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
+
+        try {
+            userRepository.save(user);
+            return new BalanceResponse(user.getId(), new BigDecimal(0));
+
+        } catch(Exception e)  {
+            e.printStackTrace();
+        }
+        return null;
     }
 
+    //OK
     @PostMapping("find-account")
     public BalanceResponse findAccount(LoginAccountRequest request) {
-        throw new IllegalStateException("Not implemented");
+        Long accountId = userRepository.findId(request.getEmail(), request.getPassword());
+        BigDecimal amount = userRepository.findBalance(request.getEmail(), request.getPassword());
+        return new BalanceResponse(accountId, amount);
     }
 
+    //OK
     @GetMapping("balance/{account}")
     public BalanceResponse balance(@PathVariable("account") Long account) {
         final Balance balance = service.balance(account);
