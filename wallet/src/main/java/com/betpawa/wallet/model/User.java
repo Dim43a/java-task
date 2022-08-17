@@ -1,7 +1,6 @@
 package com.betpawa.wallet.model;
 
 import lombok.*;
-
 import javax.persistence.*;
 import java.math.BigDecimal;
 import javax.persistence.Entity;
@@ -23,5 +22,8 @@ public class User {
     @Column(name="password", nullable = false)
     private String password;
     @Column(name="balance")
-    private BigDecimal balance = new BigDecimal("0.0");
+    private BigDecimal balance;
+//
+//    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+//    Set<Operation> operations = new HashSet<Operation>();
 }

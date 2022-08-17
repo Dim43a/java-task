@@ -1,5 +1,7 @@
 package com.betpawa.wallet.rest.response;
 
-public record OperationResponse (String status, String message) {
+import java.math.BigDecimal;
+
+public record OperationResponse (String status, String message, BigDecimal currentBalance) {
 
 }

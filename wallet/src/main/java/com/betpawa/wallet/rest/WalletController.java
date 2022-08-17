@@ -1,7 +1,10 @@
 package com.betpawa.wallet.rest;
 
 import java.math.BigDecimal;
-import com.betpawa.wallet.UserRepository;
+import java.util.List;
+import com.betpawa.wallet.model.Operation;
+import com.betpawa.wallet.repository.OperationRepository;
+import com.betpawa.wallet.repository.UserRepository;
 import com.betpawa.wallet.model.User;
 import com.betpawa.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,13 +36,17 @@ public class WalletController {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private OperationRepository operationRepository;
+
     //OK
     @PostMapping("deposit/{account}")
     public OperationResponse deposit(@PathVariable("account") Long account, DepositRequest request) {
         final MoneyTransferResult moneyTransferResult = service.debitAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
+
         //Total balance after deposit
         final Balance balance = service.balance(account);
-        return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message());
+        return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message(), balance.amount());
     }
 
     //OK
@@ -48,7 +55,7 @@ public class WalletController {
         final MoneyTransferResult moneyTransferResult = service.creditAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
         //Total balance after withdraw
         final Balance balance = service.balance(account);
-        return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message());
+        return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message(), balance.amount());
     }
 
     //OK
@@ -84,10 +91,14 @@ public class WalletController {
         return new BalanceResponse(balance.accountId(), balance.amount());
     }
 
+    //OK
     @GetMapping("operations/{account}")
     public OperationsResponse listOperations(@PathVariable("account") Long account, @RequestParam(value = "take", defaultValue = "20") int take,
                                              @RequestParam(value = "skip", defaultValue = "0") int skip) {
-        throw new IllegalStateException("Not implemented");
-    }
 
+        List<Operation> opr = operationRepository.findOperationsByUserId(account);
+
+        return new OperationsResponse(opr, true);
+//        throw new IllegalStateException("Not implemented");
+    }
 }

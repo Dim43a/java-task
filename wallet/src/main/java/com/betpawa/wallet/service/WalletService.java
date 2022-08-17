@@ -13,6 +13,5 @@ public interface WalletService {
 
     Balance balance(Long accountId);
 
-    Optional<User> findById(Long id);
-
+//    Optional<User> findById(Long id);
 }
