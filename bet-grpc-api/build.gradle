@@ -1,0 +1,59 @@
+apply plugin: 'java-library'
+apply plugin: 'com.google.protobuf'
+
+
+dependencies {
+    implementation "javax.annotation:javax.annotation-api:${javax_version}"
+    api 'io.grpc:grpc-netty'
+    api "io.grpc:grpc-stub"
+    api "io.grpc:grpc-protobuf"
+    implementation "com.google.protobuf:protobuf-java:${protobufVersion}"
+}
+
+protobuf {
+    protoc {
+        if (osdetector.os == "osx") {
+            artifact = "com.google.protobuf:protoc:${protobufVersion}:osx-x86_64"
+        } else {
+            artifact = "com.google.protobuf:protoc:${protobufVersion}"
+        }
+    }
+    plugins {
+        grpc {
+            if (osdetector.os == "osx") {
+                artifact = "io.grpc:protoc-gen-grpc-java:${grpcBomVersion}:osx-x86_64"
+            } else {
+                artifact = "io.grpc:protoc-gen-grpc-java:${grpcBomVersion}"
+            }
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+        ofSourceSet('main').each { task ->
+            task.plugins {
+                grpc {
+                    outputSubDir = 'java'
+                }
+            }
+        }
+    }
+
+    generatedFilesBaseDir = "$projectDir/src/generated"
+}
+
+sourceSets {
+    src {
+        main {
+            java {
+                srcDirs 'build/generated/source/proto/main/grpc'
+                srcDirs 'build/generated/source/proto/main/java'
+            }
+        }
+    }
+}
+
+clean {
+    delete protobuf.generatedFilesBaseDir
+}

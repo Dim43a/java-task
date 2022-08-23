@@ -2,10 +2,10 @@ package com.betpawa.wallet.rest;
 
 import java.math.BigDecimal;
 import java.util.List;
-import com.betpawa.wallet.model.Operation;
+import com.betpawa.wallet.model.wallet.Operations;
 import com.betpawa.wallet.repository.OperationRepository;
 import com.betpawa.wallet.repository.UserRepository;
-import com.betpawa.wallet.model.User;
+import com.betpawa.wallet.model.wallet.Users;
 import com.betpawa.wallet.service.WalletService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import com.betpawa.wallet.dto.Balance;
-import com.betpawa.wallet.dto.MoneyTransferData;
-import com.betpawa.wallet.dto.MoneyTransferResult;
+import com.betpawa.wallet.dto.wallet.Balance;
+import com.betpawa.wallet.dto.wallet.MoneyTransferData;
+import com.betpawa.wallet.dto.wallet.MoneyTransferResult;
 import com.betpawa.wallet.rest.request.DepositRequest;
 import com.betpawa.wallet.rest.request.LoginAccountRequest;
 import com.betpawa.wallet.rest.request.NewAccountRequest;
@@ -62,13 +62,13 @@ public class WalletController {
     @PostMapping("account")
     public BalanceResponse create(NewAccountRequest request) {
 
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setPassword(request.getPassword());
+        Users users = new Users();
+        users.setEmail(request.getEmail());
+        users.setPassword(request.getPassword());
 
         try {
-            userRepository.save(user);
-            return new BalanceResponse(user.getId(), new BigDecimal(0));
+            userRepository.save(users);
+            return new BalanceResponse(users.getId(), new BigDecimal(0));
 
         } catch(Exception e)  {
             e.printStackTrace();
@@ -96,7 +96,7 @@ public class WalletController {
     public OperationsResponse listOperations(@PathVariable("account") Long account, @RequestParam(value = "take", defaultValue = "20") int take,
                                              @RequestParam(value = "skip", defaultValue = "0") int skip) {
 
-        List<Operation> opr = operationRepository.findOperationsByUserId(account);
+        List<Operations> opr = operationRepository.findOperationsByUserId(account);
 
         return new OperationsResponse(opr, true);
 //        throw new IllegalStateException("Not implemented");

@@ -1,4 +1,4 @@
-package com.betpawa.wallet.dto;
+package com.betpawa.wallet.dto.wallet;
 
 import java.math.BigDecimal;
 

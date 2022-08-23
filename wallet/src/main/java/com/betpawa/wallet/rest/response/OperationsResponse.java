@@ -1,10 +1,10 @@
 package com.betpawa.wallet.rest.response;
 
-import com.betpawa.wallet.model.Operation;
+import com.betpawa.wallet.model.wallet.Operations;
 import java.util.List;
 
 public record OperationsResponse(
-        List<Operation> operations,
+        List<Operations> operations,
         boolean hasMore
 ) {
 }

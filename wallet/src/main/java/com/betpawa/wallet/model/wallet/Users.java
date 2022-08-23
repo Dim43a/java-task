@@ -1,4 +1,4 @@
-package com.betpawa.wallet.model;
+package com.betpawa.wallet.model.wallet;
 
 import lombok.*;
 import javax.persistence.*;
@@ -10,18 +10,18 @@ import javax.persistence.Entity;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
-public class User {
+public class Users {
 
     @Id
-    @Column(name = "id")
     @GeneratedValue(strategy=GenerationType.IDENTITY)
     private Long id;
-    @Column(name="email", nullable = false)
+
+    @Column(nullable = false)
     private String email;
-    @Column(name="password", nullable = false)
+
+    @Column(nullable = false)
     private String password;
-    @Column(name="balance")
+
     private BigDecimal balance;
 //
 //    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)

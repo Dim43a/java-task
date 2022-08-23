@@ -1,3 +1,4 @@
 rootProject.name = 'junior-home-task'
 include ':wallet'
 include ':wallet-grpc-api'
+include ':bet-grpc-api'

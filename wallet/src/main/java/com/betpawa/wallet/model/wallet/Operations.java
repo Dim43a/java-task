@@ -1,4 +1,4 @@
-package com.betpawa.wallet.model;
+package com.betpawa.wallet.model.wallet;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,35 +13,26 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name="operations")
-public class Operation {
+public class Operations {
 
 //    List of operations made for the account
 //    Operation type: deposit, withdrawal, bet, win
 //    When it was
 //    Amount transferred
     @Id
-    @Column(name="operation_id")
     @GeneratedValue(strategy=GenerationType.IDENTITY)
-    private Long id;
+    private Long operationId;
 
 //    @ManyToOne
 //    @JoinColumn(name = "id")
 //    private User user;
 
-    @Column(name="operation_Type")
     private String operationType;
-
-    @Column(name="operation_date")
     private LocalDateTime operationDate;
-
-    @Column(name="amount")
     private BigDecimal amount;
-
-    @Column(name="user_id")
     private Long userId;
 
-    public Operation(String operationType, LocalDateTime operationDate, BigDecimal amount, Long userId) {
+    public Operations(String operationType, LocalDateTime operationDate, BigDecimal amount, Long userId) {
         this.operationType = operationType;
         this.operationDate = operationDate;
         this.amount = amount;

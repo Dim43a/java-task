@@ -2,19 +2,12 @@ package com.betpawa.wallet.grpc;
 
 import java.math.BigDecimal;
 import java.util.Map;
-
-import com.betpawa.wallet.api.proto.AccountDetailsRequest;
-import com.betpawa.wallet.api.proto.BalanceResponse;
-import com.betpawa.wallet.api.proto.MoneyTransferRequest;
-import com.betpawa.wallet.api.proto.MoneyTransferResponse;
-import com.betpawa.wallet.api.proto.TransferStatus;
-import com.betpawa.wallet.api.proto.WalletGrpcServiceGrpc;
-import com.betpawa.wallet.dto.Balance;
-import com.betpawa.wallet.dto.MoneyTransferData;
-import com.betpawa.wallet.dto.MoneyTransferResult;
-import com.betpawa.wallet.dto.TransferStatusType;
+import com.betpawa.wallet.api.proto.*;
+import com.betpawa.wallet.dto.wallet.Balance;
+import com.betpawa.wallet.dto.wallet.MoneyTransferData;
+import com.betpawa.wallet.dto.wallet.MoneyTransferResult;
+import com.betpawa.wallet.dto.wallet.TransferStatusType;
 import com.betpawa.wallet.service.WalletService;
-
 import io.grpc.stub.StreamObserver;
 import lombok.RequiredArgsConstructor;
 import net.devh.boot.grpc.server.service.GrpcService;

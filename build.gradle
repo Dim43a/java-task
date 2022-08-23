@@ -45,6 +45,7 @@ subprojects {
 		annotationProcessor("org.projectlombok:lombok")
 		testCompileOnly("org.projectlombok:lombok")
 		testAnnotationProcessor("org.projectlombok:lombok")
+		implementation 'net.devh:grpc-spring-boot-starter:2.13.1.RELEASE'
 
 
 		annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
@@ -62,6 +63,10 @@ subprojects {
 	}
 	bootJar {
 		enabled = false
+	}
+
+	task wrapper(type: Wrapper) {
+		gradleVersion = '4.1'
 	}
 }
 

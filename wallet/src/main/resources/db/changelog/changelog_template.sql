@@ -1,3 +1,3 @@
 -- liquibase formatted sql
--- changeset author:dima
+-- changeset author:users
 -- validchecksum: ANY

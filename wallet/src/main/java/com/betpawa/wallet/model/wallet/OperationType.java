@@ -1,4 +1,4 @@
-package com.betpawa.wallet.model;
+package com.betpawa.wallet.model.wallet;
 
 public enum OperationType {
     DEPOSIT,
