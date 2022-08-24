@@ -25,15 +25,18 @@ public class WalletDefaultService implements WalletService {
 
     @Override
     public MoneyTransferResult creditAccount(MoneyTransferData transferData) {
-        MoneyTransferResult moneyTransferResult = new MoneyTransferResult(transferData.accountId(), TransferStatusType.OK, transferData.reference());
-        //Check for non-null amount. We can not debit negative amount
-        if(transferData.amount().intValue() < 0) {
+        Optional<Users> user = userRepository.findById(transferData.accountId());
+
+        if(user.isEmpty()) {
+            return new MoneyTransferResult(transferData.accountId(), TransferStatusType.FAIL, "User is not existing with request ID");
+        }
+
+        if(transferData.amount().intValue() <= 0) {
             return new MoneyTransferResult(transferData.accountId(),TransferStatusType.FAIL, "Not allowed to credit below zero value" );
         }
 
-        Optional<Users> user = userRepository.findById(transferData.accountId());
-
-        Operations operation = new Operations(OperationType.DEPOSIT.toString(), LocalDateTime.now(), transferData.amount(), transferData.accountId());
+        MoneyTransferResult moneyTransferResult = new MoneyTransferResult(transferData.accountId(), TransferStatusType.OK, transferData.reference());
+        Operations operation = new Operations(moneyTransferResult.message(), LocalDateTime.now(), transferData.amount(), transferData.accountId());
         operationRepository.save(operation);
 
         if(user.get().getBalance().intValue() < transferData.amount().intValue()) {
@@ -43,7 +46,6 @@ public class WalletDefaultService implements WalletService {
         userRepository.creditBalance(transferData.accountId(), transferData.amount());
 
         return moneyTransferResult;
-//        throw new IllegalStateException("Implement");
     }
 
     @Override
@@ -54,7 +56,7 @@ public class WalletDefaultService implements WalletService {
         Operations operation = new Operations(OperationType.DEPOSIT.toString(), LocalDateTime.now(), transferData.amount(), transferData.accountId());
         operationRepository.save(operation);
 
-        if(transferData.amount().intValue() < 0) {
+        if(transferData.amount().intValue() <= 0) {
             return new MoneyTransferResult(transferData.accountId(), TransferStatusType.FAIL, "Not allowed to debit below zero value");
         }
         userRepository.debitBalance(transferData.accountId(), transferData.amount());
@@ -63,11 +65,10 @@ public class WalletDefaultService implements WalletService {
 
     @Override
     public Balance balance(Long id) {
+        Optional<Users> user = userRepository.findById(id);
+        if(user.isEmpty()) {
+            return null;
+        }
         return new Balance(id, userRepository.findById(id).get().getBalance());
     }
-
-//    @Override
-//    public Optional<User> findById(Long id) {
-//        return userRepository.findById(id);
-//    }
 }

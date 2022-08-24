@@ -42,7 +42,6 @@ public class BetController {
     @PostMapping("acceptBet")
     public BetAcceptResult acceptBet(BetAcceptData betAcceptData) {
 
-        service.acceptBet(betAcceptData);
-        return new BetAcceptResult("Sucess");
+        return service.acceptBet(betAcceptData);
     }
 }

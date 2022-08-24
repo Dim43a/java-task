@@ -2,6 +2,8 @@ package com.betpawa.wallet.rest;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
+import com.betpawa.wallet.dto.wallet.TransferStatusType;
 import com.betpawa.wallet.model.wallet.Operations;
 import com.betpawa.wallet.repository.OperationRepository;
 import com.betpawa.wallet.repository.UserRepository;
@@ -42,20 +44,29 @@ public class WalletController {
     //OK
     @PostMapping("deposit/{account}")
     public OperationResponse deposit(@PathVariable("account") Long account, DepositRequest request) {
-        final MoneyTransferResult moneyTransferResult = service.debitAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
+        Optional<Users> user = userRepository.findById(account);
+        if(user.isEmpty()) {
+            return new OperationResponse(TransferStatusType.FAIL, "User is not found", null);
+        }
 
-        //Total balance after deposit
+        final MoneyTransferResult moneyTransferResult = service.debitAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
         final Balance balance = service.balance(account);
-        return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message(), balance.amount());
+
+        return new OperationResponse(moneyTransferResult.status(), moneyTransferResult.message(), balance.amount());
     }
 
     //OK
     @PostMapping("withdraw/{account}")
     public OperationResponse withdraw(@PathVariable("account") Long account, WithdrawRequest request) {
+        Optional<Users> user = userRepository.findById(account);
+        if(user.isEmpty()) {
+            return new OperationResponse(TransferStatusType.FAIL, "User is not found", null);
+        }
+
         final MoneyTransferResult moneyTransferResult = service.creditAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
-        //Total balance after withdraw
         final Balance balance = service.balance(account);
-        return new OperationResponse(moneyTransferResult.status().name(), moneyTransferResult.message(), balance.amount());
+
+        return new OperationResponse(moneyTransferResult.status(), moneyTransferResult.message(), balance.amount());
     }
 
     //OK
@@ -99,6 +110,5 @@ public class WalletController {
         List<Operations> opr = operationRepository.findOperationsByUserId(account);
 
         return new OperationsResponse(opr, true);
-//        throw new IllegalStateException("Not implemented");
     }
 }

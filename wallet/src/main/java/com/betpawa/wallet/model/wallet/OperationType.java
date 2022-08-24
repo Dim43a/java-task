@@ -4,5 +4,6 @@ public enum OperationType {
     DEPOSIT,
     WITHDRAW,
     BET,
-    WIN
+    WIN,
+    FAIL
 }

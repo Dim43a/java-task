@@ -1,7 +1,8 @@
 package com.betpawa.wallet.rest.response;
 
+import com.betpawa.wallet.dto.wallet.TransferStatusType;
 import java.math.BigDecimal;
 
-public record OperationResponse (String status, String message, BigDecimal currentBalance) {
+public record OperationResponse (TransferStatusType status, String message, BigDecimal currentBalance) {
 
 }

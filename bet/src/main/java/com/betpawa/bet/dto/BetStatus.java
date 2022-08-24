@@ -3,5 +3,7 @@ package com.betpawa.bet.dto;
 public enum BetStatus {
     PENDING,
     WIN,
-    LOSE
+    LOSE,
+    ERROR,
+    NOT_ENOUGH_MONEY
 }

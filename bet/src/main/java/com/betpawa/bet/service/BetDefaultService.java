@@ -7,13 +7,27 @@ import com.betpawa.bet.model.ActiveBets;
 import com.betpawa.bet.model.BetSlips;
 import com.betpawa.bet.repository.ActiveBetRepository;
 import com.betpawa.bet.repository.BetRepository;
+import com.betpawa.wallet.api.proto.*;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Service
 public class BetDefaultService implements BetService{
+
+    private static final Logger logger = Logger.getLogger(BetDefaultService.class.getName());
+
+    private static WalletGrpcServiceGrpc.WalletGrpcServiceBlockingStub init() {
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(
+                "localhost", 4565).usePlaintext().build();
+
+        return WalletGrpcServiceGrpc.newBlockingStub(channel);
+    }
 
     @Autowired
     BetRepository betRepository;
@@ -23,29 +37,50 @@ public class BetDefaultService implements BetService{
 
     @Override
     public BetAcceptResult acceptBet(BetAcceptData betData){
+        AccountDetailsRequest accountDetailsRequest = AccountDetailsRequest.newBuilder().setAccountId(betData.accountId()).build();
+        try {
+            BalanceResponse balanceResponse = init().balance(accountDetailsRequest);
+            Optional<BetSlips> bet = betRepository.findById(betData.betId());
+            if(bet.isEmpty()) {
+                return new BetAcceptResult("Not found bet with following id: "
+                        + betData.betId(), BetStatus.ERROR);
+            }
 
-        Optional<BetSlips> bet = betRepository.findById(betData.betId());
+            if (balanceResponse.getAmount() < betData.amount().longValue()) {
+                return new BetAcceptResult("Bet is not accepted", BetStatus.NOT_ENOUGH_MONEY);
+            }
 
-        //Need to extract this
-        Double amount = betData.amount().doubleValue();
+            MoneyTransferRequest moneyTransferRequest = MoneyTransferRequest.newBuilder()
+                    .setAccountId(betData.accountId())
+                    .setAmount(betData.amount().longValue())
+                    .setReference("Bet")
+                    .build();
 
-        Double odd = bet.get().getOdd().doubleValue();
+            MoneyTransferResponse moneyTransferResponse = init().reserveMoney(moneyTransferRequest);
+            BigDecimal possibleWin = calculatePossibleWin(bet, betData);
 
-        double possibleWin = amount * odd;
+            activeBetRepository.save(new ActiveBets(
+                    betData.accountId(),
+                    bet.get().getBetId(),
+                    bet.get().getOdd(),
+                    bet.get().getEventDate(),
+                    bet.get().getEventName(),
+                    bet.get().getOutcome(),
+                    possibleWin,
+                    BetStatus.PENDING));
 
-        BigDecimal lala = new BigDecimal(possibleWin);
+            return new BetAcceptResult("Bet was successful accepted!", BetStatus.PENDING);
 
+        } catch (Exception e) {
+            logger.log(Level.WARNING, "RPC failed: {0}", e);
+            return new BetAcceptResult("Bet is not accepted due to following error: " +
+                    e, BetStatus.ERROR);
+        }
+    }
 
-        activeBetRepository.save(new ActiveBets(
-                betData.accountId(),
-                bet.get().getBetId(),
-                bet.get().getOdd(),
-                bet.get().getEventDate(),
-                bet.get().getEventName(),
-                bet.get().getOutcome(),
-                lala,
-                BetStatus.PENDING));
+    private BigDecimal calculatePossibleWin(Optional<BetSlips> odd, BetAcceptData amount) {
+        double possibleWin = amount.amount().doubleValue() * odd.get().getOdd().doubleValue();
 
-        return new BetAcceptResult("dsds");
+        return new BigDecimal(possibleWin);
     }
 }
