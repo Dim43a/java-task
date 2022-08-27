@@ -1,9 +1,9 @@
 package com.betpawa.wallet.rest;
 
 import java.math.BigDecimal;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import com.betpawa.wallet.dto.wallet.TransferStatusType;
 import com.betpawa.wallet.model.wallet.Operations;
 import com.betpawa.wallet.repository.OperationRepository;
 import com.betpawa.wallet.repository.UserRepository;
@@ -44,71 +44,77 @@ public class WalletController {
     //OK
     @PostMapping("deposit/{account}")
     public OperationResponse deposit(@PathVariable("account") Long account, DepositRequest request) {
-        Optional<Users> user = userRepository.findById(account);
-        if(user.isEmpty()) {
-            return new OperationResponse(TransferStatusType.FAIL, "User is not found", null);
-        }
 
         final MoneyTransferResult moneyTransferResult = service.debitAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
-        final Balance balance = service.balance(account);
-
-        return new OperationResponse(moneyTransferResult.status(), moneyTransferResult.message(), balance.amount());
+        Optional<Users> user = userRepository.findById(account);
+        return new OperationResponse(moneyTransferResult.status(), moneyTransferResult.message(), user.get().getBalance());
     }
 
     //OK
     @PostMapping("withdraw/{account}")
     public OperationResponse withdraw(@PathVariable("account") Long account, WithdrawRequest request) {
-        Optional<Users> user = userRepository.findById(account);
-        if(user.isEmpty()) {
-            return new OperationResponse(TransferStatusType.FAIL, "User is not found", null);
-        }
 
+        //Wrong or not existing id handling
         final MoneyTransferResult moneyTransferResult = service.creditAccount(new MoneyTransferData(account, BigDecimal.valueOf(request.getAmount()), request.getReference()));
-        final Balance balance = service.balance(account);
-
-        return new OperationResponse(moneyTransferResult.status(), moneyTransferResult.message(), balance.amount());
+        Optional<Users> user = userRepository.findById(account);
+        return new OperationResponse(moneyTransferResult.status(), moneyTransferResult.message(), user.get().getBalance());
     }
 
-    //OK
     @PostMapping("account")
     public BalanceResponse create(NewAccountRequest request) {
 
-        Users users = new Users();
-        users.setEmail(request.getEmail());
-        users.setPassword(request.getPassword());
+        Users user = new Users();
+        user.setEmail(request.getEmail());
+        user.setPassword(request.getPassword());
+
+        user.setBalance(new BigDecimal("0.0"));
 
         try {
-            userRepository.save(users);
-            return new BalanceResponse(users.getId(), new BigDecimal(0));
+            userRepository.save(user);
+            return new BalanceResponse("User successful created", user.getId(), user.getBalance());
 
         } catch(Exception e)  {
-            e.printStackTrace();
+            return new BalanceResponse("Error "+ e.getMessage(), user.getId(), null);
         }
-        return null;
     }
 
-    //OK
     @PostMapping("find-account")
     public BalanceResponse findAccount(LoginAccountRequest request) {
         Long accountId = userRepository.findId(request.getEmail(), request.getPassword());
+
+        //Wrong email or password handling
+        if(accountId == null) {
+            return new BalanceResponse("Account not found, please try again.", accountId, null);
+        }
         BigDecimal amount = userRepository.findBalance(request.getEmail(), request.getPassword());
-        return new BalanceResponse(accountId, amount);
+        return new BalanceResponse("Account found", accountId, amount);
     }
 
     //OK
     @GetMapping("balance/{account}")
     public BalanceResponse balance(@PathVariable("account") Long account) {
+        Optional <Users> user = userRepository.findById(account);
+
+        //Wrong or not existing id handling
+        if(user.isEmpty()) {
+            return new BalanceResponse("Balance with requested id is not found",  null, null);
+        }
         final Balance balance = service.balance(account);
-        return new BalanceResponse(balance.accountId(), balance.amount());
+
+        return new BalanceResponse("Current balance", user.get().getId(), balance.amount());
     }
 
-    //OK
     @GetMapping("operations/{account}")
     public OperationsResponse listOperations(@PathVariable("account") Long account, @RequestParam(value = "take", defaultValue = "20") int take,
                                              @RequestParam(value = "skip", defaultValue = "0") int skip) {
 
+        //Wrong or not existing id handling
+        Optional<Users> user = userRepository.findById(account);
+        if(user.isEmpty()) {
+            return new OperationsResponse("Operations with requested id not found", Collections.emptyList(), false);
+        }
         List<Operations> opr = operationRepository.findOperationsByUserId(account);
 
-        return new OperationsResponse(opr, true);
+        return new OperationsResponse("Operations with requested id:", opr, true);
     }
 }

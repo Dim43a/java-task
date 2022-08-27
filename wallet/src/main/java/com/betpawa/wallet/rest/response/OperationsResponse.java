@@ -4,6 +4,7 @@ import com.betpawa.wallet.model.wallet.Operations;
 import java.util.List;
 
 public record OperationsResponse(
+        String message,
         List<Operations> operations,
         boolean hasMore
 ) {

@@ -17,4 +17,4 @@ CREATE TABLE operations(
    userId INT(11)
 #    CONSTRAINT fk_id FOREIGN KEY id
 #    REFERENCES users(id)
-)
+);

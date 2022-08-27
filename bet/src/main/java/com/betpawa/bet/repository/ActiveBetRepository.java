@@ -10,4 +10,6 @@ import java.util.List;
 public interface ActiveBetRepository extends CrudRepository<ActiveBets, Long> {
 
     List<ActiveBet> findActiveBetsByAccountId(Long accountId);
+
+    ActiveBets findActiveBetsByAccountIdAndBetId(Long AccountId, Long betId);
 }

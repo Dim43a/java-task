@@ -19,7 +19,6 @@ public class WalletHomeTaskApplication {
 		WalletHomeTaskApplication.service = service;
 	}
 
-
 	private static final Logger logger = Logger.getLogger(WalletHomeTaskApplication.class.getName());
 
 	public static void main(String[] args) {

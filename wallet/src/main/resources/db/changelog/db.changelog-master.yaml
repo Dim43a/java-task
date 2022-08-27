@@ -3,6 +3,6 @@ databaseChangeLog:
       file: "001_user_table.sql"
       relativeToChangelogFile: true
 # In order, we want to make some changes related to DB we need to create a new changelog and include it here
-#  - include:
-#      file: "db/changelog/changelog_template.sql"
-#      relativeChangelogFile: true
+  - include:
+      file: "db/changelog/changelog_template.sql"
+      relativeChangelogFile: true

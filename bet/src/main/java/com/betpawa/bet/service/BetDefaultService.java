@@ -7,6 +7,7 @@ import com.betpawa.bet.model.ActiveBets;
 import com.betpawa.bet.model.BetSlips;
 import com.betpawa.bet.repository.ActiveBetRepository;
 import com.betpawa.bet.repository.BetRepository;
+import com.betpawa.bet.rest.request.BetActionRequest;
 import com.betpawa.wallet.api.proto.*;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -39,15 +40,15 @@ public class BetDefaultService implements BetService{
     public BetAcceptResult acceptBet(BetAcceptData betData){
         AccountDetailsRequest accountDetailsRequest = AccountDetailsRequest.newBuilder().setAccountId(betData.accountId()).build();
         try {
-            BalanceResponse balanceResponse = init().balance(accountDetailsRequest);
             Optional<BetSlips> bet = betRepository.findById(betData.betId());
             if(bet.isEmpty()) {
                 return new BetAcceptResult("Not found bet with following id: "
-                        + betData.betId(), BetStatus.ERROR);
+                        + betData.betId(), BetStatus.ERROR.toString());
             }
 
+            BalanceResponse balanceResponse = init().balance(accountDetailsRequest);
             if (balanceResponse.getAmount() < betData.amount().longValue()) {
-                return new BetAcceptResult("Bet is not accepted", BetStatus.NOT_ENOUGH_MONEY);
+                return new BetAcceptResult("Bet is not accepted", BetStatus.NOT_ENOUGH_MONEY.toString());
             }
 
             MoneyTransferRequest moneyTransferRequest = MoneyTransferRequest.newBuilder()
@@ -69,14 +70,37 @@ public class BetDefaultService implements BetService{
                     possibleWin,
                     BetStatus.PENDING));
 
-            return new BetAcceptResult("Bet was successful accepted!", BetStatus.PENDING);
+            return new BetAcceptResult("Bet was successful accepted!", BetStatus.PENDING.toString());
 
         } catch (Exception e) {
             logger.log(Level.WARNING, "RPC failed: {0}", e);
             return new BetAcceptResult("Bet is not accepted due to following error: " +
-                    e, BetStatus.ERROR);
+                    e, BetStatus.ERROR.toString());
         }
     }
+
+    @Override
+    public String betAction(BetActionRequest betActionRequest) {
+        ActiveBets targetBet = activeBetRepository.findActiveBetsByAccountIdAndBetId(betActionRequest.accountId(), betActionRequest.betId());
+
+        switch (betActionRequest.action()) {
+            case "WIN":
+                MoneyTransferRequest winMoneyTransferRequest = MoneyTransferRequest.newBuilder().setAccountId(betActionRequest.accountId()).setAmount(targetBet.getPossibleWin().longValue()).setReference("WIN").build();
+                MoneyTransferResponse winMoneyTransferResponse = init().addMoney(winMoneyTransferRequest);
+                break;
+            case "LOSE":
+                MoneyTransferRequest loseMoneyTransferRequest = MoneyTransferRequest.newBuilder().setAccountId(betActionRequest.accountId()).setAmount(0L).setReference("LOSE").build();
+                MoneyTransferResponse loseMoneyTransferResponse = init().addMoney(loseMoneyTransferRequest);
+                break;
+            default:
+                return null;
+
+        }
+
+        activeBetRepository.deleteById(targetBet.getActiveBetId());
+        return "Success";
+    }
+
 
     private BigDecimal calculatePossibleWin(Optional<BetSlips> odd, BetAcceptData amount) {
         double possibleWin = amount.amount().doubleValue() * odd.get().getOdd().doubleValue();
